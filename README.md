@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
-namespace ещё_один_бой_сука    // тут ты думаешь и делаешь  её ты исправил 
+namespace errtrytyh// вот тут ты отправил читсую работу 
 {
     internal class Program
     {
@@ -30,16 +28,16 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
             CreateFighters();
         }
 
-        public void Work() 
+        public void Work()
         {
             const string CommandShowAllFighters = "1";
             const string CommandChooseFighters = "2";
-            const string CommandStartFight = "3"; 
+            const string CommandStartFight = "3";
             const string CommandExit = "4";
 
-            bool isWork = true;  
+            bool isWork = true;
 
-            while (isWork)  
+            while (isWork)
             {
                 Console.WriteLine($"{CommandShowAllFighters} - показать всех бойцов");
                 Console.WriteLine($"{CommandChooseFighters} - выбрать бойцов");
@@ -55,7 +53,7 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
                         break;
 
                     case CommandChooseFighters:
-                        ChooseFighters(); 
+                        ChooseFighters();
                         break;
 
                     case CommandStartFight:
@@ -63,7 +61,7 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
                         break;
 
                     case CommandExit:
-                        isWork = false; 
+                        isWork = false;
                         break;
 
                     default:
@@ -76,91 +74,117 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
             }
         }
 
-        private void CreateFighters()  
+        private void CreateFighters()
         {
-            _fighters.Add(new CrazyMax("Безумный макс", 120, 20, 20));  
-            _fighters.Add(new TrevorPhillips("Тревор филипс", 100, 20, 10));  
-            _fighters.Add(new WilliamBlaskowitz("Уильям бласковиц", 110, 30, 15));  
-            _fighters.Add(new Kratos("Кратос", 130, 20, 15)); 
-            _fighters.Add(new Batman("Бетман", 140, 30, 10)); 
+            _fighters.Add(new CrazyMax("Безумный макс", 120, 20, 20));
+            _fighters.Add(new TrevorPhillips("Тревор филипс", 100, 20, 10));
+            _fighters.Add(new WilliamBlaskowitz("Уильям бласковиц", 110, 30, 15));
+            _fighters.Add(new Kratos("Кратос", 130, 20, 15));
+            _fighters.Add(new Batman("Бетман", 140, 30, 10));
         }
-
         
-
-        private bool TryGetFigher(out Fighter fighter)
+        private bool TryGetFighter(out Fighter fighter, Fighter excludeFighter = null) 
         {
             fighter = null;
 
             ShowFighters();
 
             Console.Write("\nВыберите бойца: ");
-
-            if (int.TryParse(Console.ReadLine(), out int index) == true)
+            
+            if (!int.TryParse(Console.ReadLine(), out int index))
             {
-                index--;
-
-                if (index >= 0 && index < _fighters.Count && _fighters[index].Health > 0)
-                {
-                    fighter = _fighters[index];
-
-                    return true;
-                }
-                else
-                {
-                    Console.WriteLine("\nНет такого бойца");
-                }
+                Console.WriteLine("\nПожалуйста, введите число.");
+                return false;
             }
-
-            return false;
+            
+            index--;
+            
+            if (index >= 0 && index < _fighters.Count && _fighters[index].Health > 0)
+            {
+                fighter = _fighters[index];
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("\nНет такого бойца.");
+                return false;
+            }
         }
 
 
-        private void ChooseFighters()  
+        private void ChooseFighters()
         {
-            _fighter1 = GetFighter();
+            _fighter1 = SelectFighterAndDisplayInfo("Первый боец: ");
 
             if (_fighter1 != null)
             {
-                Console.WriteLine("\nПервый боец: ");
-                _fighter1.ShowInfo();
+                _fighter2 = SelectFighterAndDisplayInfo("Второй боец: ", _fighter1);
 
-                _fighter2 = GetFighter(_fighter1);
-
-                if (_fighter2 != null)
+                if (_fighter2 == null)
                 {
-                    Console.WriteLine("\nВторой боец: ");
-                    _fighter2.ShowInfo();
+                    Console.WriteLine("\nОшибка, повторите выбор второго бойца.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("\nОшибка, повторите выбор первого бойца.");
+            }
+        }
+        // так смотрите умные люди у меня есть метод SelectValidFighter который не работает если я начинаю делать что либ ос excludeFighter и я понимаю что он требует аут но у меня даже с ним как я только не пишу не получаеться  и жёстко туплю так же это черновик на рустые строки можете не смотреть
+
+        private Fighter SelectFighterAndDisplayInfo(string promptMessage, Fighter excludeFighter = null)
+        {
+            Fighter selectedFighter = TryGetFighter(excludeFighter);
+
+            
+
+            if (selectedFighter != null)  
+            {
+                Console.WriteLine($"\n{promptMessage}");
+                selectedFighter.ShowInfo();
+            }
+            else
+            {
+                Console.WriteLine("\nНе удалось выбрать бойца. Попробуйте еще раз.");
+            }
+
+            return selectedFighter;
+        }
+
+
+
+        private Fighter SelectValidFighter(Fighter excludeFighter = null) 
+        {
+            while (true) 
+            {
+                if (TryGetFighter(out Fighter fighter)) 
+                {
+                    
+                    if (excludeFighter == null || fighter != excludeFighter)
+                    {
+                        return fighter;
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("\nОшибка, повторите выбор");
+                    
+                    Console.WriteLine("Попробуй еще раз.");
                 }
-            }
-        }
-
-        private Fighter GetFighter(Fighter excludeFighter = null)  
-        {
-            while (true)
-            {
-                if (TryGetFigher(out Fighter fighter) && (excludeFighter == null || fighter != excludeFighter))
-                {
-                    return fighter;
-                }              
             }
         }
 
         private void Fight(Fighter fighter1, Fighter fighter2)
         {
-            _fighter1 = null;
+            _fighter1 = null; 
             _fighter2 = null;
-
+            
             if (fighter1 != null && fighter2 != null)
             {
                 Console.WriteLine("\nБитва началась!\n");
-
+                
                 while (fighter1.IsDead == false && fighter2.IsDead == false)
-                {
-                    if (ChooseAttackerFirst(fighter1, fighter2) == fighter1) 
+                {  
+                    if (ChooseAttackerFirst(fighter1, fighter2) == fighter1)
                     {
                         Attack(fighter1, fighter2);
                         Attack(fighter2, fighter1);
@@ -181,8 +205,8 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
         }
 
         private Fighter ChooseAttackerFirst(Fighter fighter1, Fighter fighter2)
-        {
-            if (fighter1.RollDice(_random) >= fighter2.RollDice(_random)) 
+        { 
+            if (fighter1.RollDice(_random) >= fighter2.RollDice(_random))
             {
                 return fighter1;
             }
@@ -203,13 +227,13 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
 
                 if (defender.Health <= 0)
                 {
-                    Console.WriteLine($"\n{defender.Name} убит!");
+                    Console.WriteLine($"\n{defender.Name} Убит!");
                 }
             }
         }
 
-        private void ShowAllСharacteristicsFighters() 
-        {
+        private void ShowAllСharacteristicsFighters()
+        {  
             int number = 0;
 
             Console.Write("\n");
@@ -224,16 +248,16 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
         }
 
         private void ShowFighters() 
-        {
-            int number = 0;
+        { 
+            int number = 0; 
 
             Console.Write("\n");
 
-            foreach (var fighter in _fighters)
+            foreach (var fighter in _fighters) 
             {
                 number++;
 
-                if (fighter.Health > 0)
+                if (fighter.Health > 0)  
                 {
                     Console.WriteLine($"{number} - {fighter.Name}");
                 }
@@ -281,38 +305,38 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
             }
         }
 
-        public int TakeDamage(int damage)  
+        public int TakeDamage(int damage)
         {
-            int divider = 100; 
+            int divider = 100;
 
             Health -= damage - damage * Armor / divider;
 
             return Health;
         }
 
-        public virtual int Attak() 
+        public virtual int Attak()
         {
             return Damage;
         }
 
-        public virtual void AddSKill() 
+        public virtual void AddSKill()
         {
         }
 
-        protected virtual void ShowSKill() 
+        protected virtual void ShowSKill()
         {
         }
     }
 
-    class CrazyMax : Fighter  
+    class CrazyMax : Fighter
     {
-        private const int minimumHealthToUpgradeArmor = 30;    
-        private const int maximumArmor = 50;  
+        private const int minimumHealthToUpgradeArmor = 30;
+        private const int maximumArmor = 50;
 
         public CrazyMax(string name, int health, int armor, int damage) : base(name, health, armor, damage) { }
 
-        public override void AddSKill() 
-        {              
+        public override void AddSKill()
+        {
             if (Health < minimumHealthToUpgradeArmor && IsSkill == false)
             {
                 IsSkill = true;
@@ -321,7 +345,7 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
             }
         }
 
-        protected override void ShowSKill() 
+        protected override void ShowSKill()
         {
             Console.Write("Умение: Если у бойца здоровье < 30, то получаемый урон уменьшается на 50%\n");
         }
@@ -330,22 +354,22 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
     class TrevorPhillips : Fighter
     {
         private const int minimumHealthToImproveAttack = 30;
-        private const int increaseInNumber = 2; //увеличение количества
+        private const int increaseInNumber = 2; 
 
         public TrevorPhillips(string name, int health, int armor, int damage) : base(name, health, armor, damage) { }
 
-        public override void AddSKill() 
-        {                        
+        public override void AddSKill()
+        {
             if (Health < minimumHealthToImproveAttack && IsSkill == false)
             {
-                IsSkill = true; 
+                IsSkill = true;
                 Damage *= increaseInNumber;
 
                 Console.WriteLine($"У {Name} сработало умение - урон увеличился до {Damage}");
             }
         }
 
-        protected override void ShowSKill() 
+        protected override void ShowSKill()
         {
             Console.Write("Умение: Если у бойца  здоровье < 30, то урон увеличивается в 2 раза\n");
         }
@@ -356,7 +380,7 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
         private const int minimumHealthToHit = 40;
         private const int increaseInNumber = 5;
         private const int devide = 2;
-        
+
         public WilliamBlaskowitz(string name, int health, int armor, int damage) : base(name, health, armor, damage) { }
 
         public override int Attak()
@@ -382,7 +406,7 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
             }
 
         }
-        protected override void ShowSKill() 
+        protected override void ShowSKill()
         {
             Console.Write("Умение: Если у бойца  здоровье < 40, то боец наносит серию ударов\n");
         }
@@ -392,7 +416,7 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
     {
         public Kratos(string name, int health, int armor, int damage) : base(name, health, armor, damage) { }
 
-        public override void AddSKill() 
+        public override void AddSKill()
         {
             if (Health < 0 && IsSkill == false)
             {
@@ -404,7 +428,7 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
             }
         }
 
-        protected override void ShowSKill() 
+        protected override void ShowSKill()
         {
             Console.Write("Умение: Воскрешение\n");
         }
@@ -419,7 +443,7 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
 
         public override void AddSKill()
         {
-            
+
             if (Health > 0 && Health < minimumHealthIncreases && IsSkill == false)
             {
                 IsSkill = true;
@@ -436,7 +460,8 @@ namespace ещё_один_бой_сука    // тут ты думаешь и д
         }
     }
 }
-    
+
+
 
 
 
