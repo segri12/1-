@@ -1,0 +1,492 @@
+
+using System;
+using System.Collections.Generic;   
+
+namespace Task50_CarService_v2
+{// вот эту ты отправляешь а прошлую ООП_создание_авто_сервиса_13 ты как черновик использовал 
+    class Program  
+    {
+        static void Main(string[] args)
+        {
+            CarService carService = new CarService();
+            carService.Work();
+        }
+    }
+
+    class CarService 
+    {
+        private Random _random = new Random();
+        private Storage _storage; 
+        private Queue<Costumer> _costumers = new Queue<Costumer>(); 
+        public int Money { get; private set; }
+
+        public CarService()
+        {
+            Money = 1700;
+
+            _storage = new Storage(_random);
+
+            AddCostumersToQueue();
+        }
+
+        public void Work()
+        {
+            const string CommandServeCostumer = "1";
+            const string CommandExit = "exit";
+
+            bool isWork = true;
+
+            while (isWork && IsBankrupt() == false)
+            {
+                Console.WriteLine("Список команд: ");
+                Console.WriteLine($"{CommandServeCostumer} - обслужить клиента");
+                Console.WriteLine($"{CommandExit} - выход");
+
+                Console.Write("\nВыберите пункт меню: ");
+                string userInput = Console.ReadLine();
+
+                switch (userInput)
+                {
+                    case CommandServeCostumer:
+                        ServeCostumer();
+                        break;
+
+                    case CommandExit:
+                        isWork = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("Попробуйте снова");
+                        break;
+                }
+
+                Console.Clear();
+            }
+
+            if (IsBankrupt() == true)
+            {
+                Console.WriteLine("Вы обанкротились!");
+                Console.ReadKey();
+            }
+        }
+
+        private void AddCostumersToQueue() 
+        {
+            int minCountCostumers = 10; 
+            int maxCountCostumers = 21;  
+
+            int countCostumers = _random.Next(minCountCostumers, maxCountCostumers);
+
+            for (int i = 0; i < countCostumers; i++)
+            {
+                _costumers.Enqueue(new Costumer(_random)); 
+            }
+        }
+
+        private void ShowInfoCostumer(Costumer costumer)  
+        {
+            int priceBrokenDetail = costumer.GetBrokenDetail().Cost;
+            string nameBrokenDetail = costumer.GetBrokenDetail().Name;
+
+            Console.Write("У клиента ");
+            costumer.ShowInfo();
+            Console.WriteLine($"{nameBrokenDetail} (Цена: {priceBrokenDetail} $) / Полная стоимость ремонта: " +
+                $"{GetPriceForFix(priceBrokenDetail)} $");
+        }
+
+        private void ShowStorage()  
+        {
+            int number = 0;
+
+            foreach (var detail in _storage.GetAllDetails())      
+            {
+                number++;
+
+                Console.Write($"{number}. ");
+                detail.ShowInfo();
+            }
+        }
+
+        private void ServeCostumer() 
+        {
+            const string CommandRefuseToFix = "1";
+            const string CommandFixCar = "2";
+            const string CommandExitMenu = "3";
+
+            bool isWork = true;
+
+            while (isWork && _costumers.Count > 0 && IsBankrupt() == false)
+            {
+                Console.Clear();
+
+                Console.WriteLine($"В кассе {Money} $ / Кол-во клиентов - {_costumers.Count}:");
+
+                Console.WriteLine("\nИнформация о клиенте:");
+                ShowInfoCostumer(_costumers.Peek());
+                Console.WriteLine("\nСписок деталей на складе:");
+                ShowStorage();
+
+                Console.WriteLine("\nСписок команд: ");
+                Console.WriteLine($"{CommandRefuseToFix} - отказать в ремонте");
+                Console.WriteLine($"{CommandFixCar} - отремонтировать автомобиль клиента");
+                Console.WriteLine($"{CommandExitMenu} - выйти из меню");
+
+                Console.Write("\nВыберите действие: ");
+                string userInput = Console.ReadLine();
+
+                switch (userInput)
+                {
+                    case CommandRefuseToFix:
+                        RefuseToFix(_costumers.Peek());
+                        break;
+
+                    case CommandFixCar:
+                        FixDetail(_costumers.Peek());
+                        break;
+
+                    case CommandExitMenu:
+                        isWork = false;
+                        break;
+
+                    default:
+                        break;
+                }
+
+                Console.ReadKey();
+                Console.Clear();
+            }
+
+            if (_costumers.Count <= 0)
+            {
+                Console.WriteLine("Клиентов нет");
+
+                Console.ReadKey();
+            }
+        }
+
+        private bool IsBankrupt()
+        {
+            return Money < 0;
+        }
+
+        private void FixDetail(Costumer costumer)
+        {
+            Detail detail = _storage.TryGiveDetail();
+
+            if (detail != null)
+            {
+                int priceForRepair = GetPriceForFix(detail.Cost);
+
+                if (detail.Name == costumer.GetBrokenDetail().Name)
+                {
+                    costumer.GiveMoney(priceForRepair);
+                    GetMoneyForFix(priceForRepair);
+
+                    _costumers.Dequeue();
+
+                    Console.WriteLine($"Починили неисправную деталь ({detail.Name})! Заработали - {priceForRepair} $");
+                }
+                else
+                {
+                    costumer.TakeMoney(priceForRepair);
+                    Repay(priceForRepair);
+
+                    _costumers.Dequeue();
+
+                    Console.WriteLine($"Починили исправную деталь ({detail.Name})! За это пришлось заплатить клиенту за ошибку!");
+                }
+            }
+        }
+
+        private void RefuseToFix(Costumer costumer)
+        {
+            int fine = 100;
+
+            Console.WriteLine("Нет необходимой детали на складе.");
+            Console.WriteLine("Пришлось заплатить штраф клиенту!");
+
+            costumer.GiveMoney(fine);
+            Repay(fine);
+
+            _costumers.Dequeue();
+        }
+
+        private int GetPriceForFix(int priceDetail)
+        {
+            int divider = 2;
+
+            return priceDetail + priceDetail / divider;
+        }
+
+        private void GetMoneyForFix(int moneyForRepair)
+        {
+            Money += moneyForRepair;
+        }
+
+        private void Repay(int moneyForRepair)
+        {
+            Money -= moneyForRepair;
+        }
+    }
+
+    class Storage  
+    {
+        private List<Detail> _detailsInStock = new List<Detail>();
+        private Random _random;
+        private CollectionDetails _namesOfDetails = new CollectionDetails();
+
+        public Storage(Random random)
+        {
+            _random = random;
+            AddDetails();  
+        }
+
+        public List<Detail> GetAllDetails()
+        {
+            return new List<Detail>(_detailsInStock);
+        }
+
+        public Detail TryGiveDetail()
+        {
+
+            if (TryGetDetail(out Detail detail) == true)
+            {
+                _detailsInStock.Remove(detail);
+
+                return detail;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private void AddDetails() 
+        {
+            int minCountDetails = 2;
+            int maxCountDetails = 6;
+
+            foreach (var detail in _namesOfDetails.GetCatalog())
+            {
+                int countDetails = _random.Next(minCountDetails, maxCountDetails);  
+
+                for (int i = 0; i < countDetails; i++)
+                {
+                    _detailsInStock.Add(detail.Clone());   
+                }
+            }
+        }
+
+        private bool TryGetDetail(out Detail detail)
+        {
+            detail = null;
+
+            Console.Write("\nВведите номер детали, которую хотите заменить клиенту: ");
+
+            if (int.TryParse(Console.ReadLine(), out int index) == true)
+            {
+                index--;
+
+                if (index >= 0 && index < _detailsInStock.Count)
+                {
+                    detail = _detailsInStock[index];
+
+                    return true;
+                }
+            }
+
+            Console.WriteLine("Указан неверный номер детали");
+            return false;
+        }
+    }
+
+    class Costumer 
+    {
+        private Random _random;
+        private Car _car;
+        public int Money { get; private set; }
+
+        public Costumer(Random random)
+        {
+            _random = random;
+            _car = new Car(_random);
+
+            Money = 5000;
+        }
+
+        public void ShowInfo()
+        {                                                
+            Console.WriteLine($"Cломалась деталь: {_car.BrokenDetail.Name})");
+        }
+
+        public void TakeMoney(int money) 
+        {
+            Money += money;
+        }
+
+        public void GiveMoney(int repairAmount) 
+        {
+            Money -= repairAmount;
+        }
+
+        public Detail GetBrokenDetail() 
+        {
+            return _car.BrokenDetail;
+        }
+    }
+
+    class Car  
+    {
+        private Random _random;
+        private CollectionDetails _details = new CollectionDetails();
+        public Detail BrokenDetail { get; private set; }
+
+        private void DetectFaultyDetail(Random random)
+        {                                                                                                                     //  ЭТО ОТВЕЧАПЕТ ЗА ПОЯВЛЕНИЕ РАНДОМНОЙ ДЕТАЛИ   КОТОРАЯ ПОЛОМАНА И ПОНЯТЬ ЧТО ТАКОЕ 0
+                                                                                                                              //BrokenDetail = _details.GetCatalog()[random.Next(0, _details.GetCatalog().Count)].Clone();
+            Detail randomDetail = _details.GetCatalog()[random.Next(0, _details.GetCatalog().Count)];
+
+            BrokenDetail = randomDetail.Clone();
+        }
+
+        public Car(Random random)
+        {
+            _random = random;
+
+            DetectFaultyDetail(_random);  
+        }
+    }
+
+    class CollectionDetails 
+    {
+        private List<Detail> _catalog; 
+
+        public CollectionDetails()
+        {
+            _catalog = new List<Detail>
+                {
+                    new Engine(),
+                    new Wheel(),
+                    new Generator(),
+                    new ShockAbsorber(),
+                    new Radiator(),
+                    new ControlABS(),
+                    new SparkPlug()
+                };
+        }
+
+        public List<Detail> GetCatalog() 
+        {
+            return new List<Detail>(_catalog);
+        }
+    }
+
+    abstract class Detail
+    {
+        public string Name { get; protected set; }
+        public int Cost { get; protected set; }
+        public abstract Detail Clone();
+        public void ShowInfo()
+        {
+            Console.WriteLine($"{Name}, цена: {Cost} $"); 
+        }
+    }
+
+    class Engine : Detail
+    {
+        public Engine()
+        {
+            Name = "Двигатель";
+            Cost = 1000;
+        }
+
+        public override Detail Clone()
+        {
+            return new Engine();
+        }
+    }
+
+    class Wheel : Detail
+    {
+        public Wheel()
+        {
+            Name = "Колесо";
+            Cost = 200;
+        }
+
+        public override Detail Clone()
+        {
+            return new Wheel();
+        }
+    }
+
+    class Generator : Detail
+    {
+        public Generator()
+        {
+            Name = "Генератор";
+            Cost = 250;
+        }
+
+        public override Detail Clone()
+        {
+            return new Generator();
+        }
+    }
+
+    class ShockAbsorber : Detail
+    {
+        public ShockAbsorber()
+        {
+            Name = "Амортизатор";
+            Cost = 200;
+        }
+
+        public override Detail Clone()
+        {
+            return new ShockAbsorber();
+        }
+    }
+
+    class Radiator : Detail
+    {
+        public Radiator()
+        {
+            Name = "Радиатор";
+            Cost = 400;
+        }
+
+        public override Detail Clone()
+        {
+            return new Radiator();
+        }
+    }
+
+    class ControlABS : Detail
+    {
+        public ControlABS()
+        {
+            Name = "Блок управления ABS";
+            Cost = 150;
+        }
+
+        public override Detail Clone()
+        {
+            return new ControlABS();
+        }
+    }
+
+    class SparkPlug : Detail
+    {
+        public SparkPlug()
+        {
+            Name = "Свеча зажигания";
+            Cost = 50;
+        }
+
+        public override Detail Clone()
+        {
+            return new SparkPlug();
+        }
+    }
+}
