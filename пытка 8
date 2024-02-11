@@ -1,0 +1,534 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using static System.Net.Mime.MediaTypeNames;
+
+namespace блятская_система_боя_аааааааааааааааааааааааааааааааааааа
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Game game = new Game();
+            game.Work();
+        }
+    }
+
+    class Game
+    {
+        private Random _random = new Random();
+        private List<Fighter> _fighters = new List<Fighter> { };
+
+        private Fighter _fighter1;
+        private Fighter _fighter2;
+
+        public Game()
+        {
+            CreateFighters();
+        }
+
+        public void Work()
+        {
+            const string CommandShowAllFighters = "1";
+            const string CommandChooseFighters = "2";
+            const string CommandStartFight = "3";
+            const string CommandExit = "4";
+
+            bool isWork = true;
+
+            while (isWork)
+            {
+                Console.WriteLine($"{CommandShowAllFighters} - показать всех бойцов");
+                Console.WriteLine($"{CommandChooseFighters} - выбрать бойцов");
+                Console.WriteLine($"{CommandStartFight} - начать бой между выбранными бойцами");
+                Console.WriteLine($"{CommandExit} - выйти");
+                Console.Write("\nВыберите пункт меню: ");
+                string userInput = Console.ReadLine();
+
+                switch (userInput)
+                {
+                    case CommandShowAllFighters:
+                        ShowAllСharacteristicsFighters();
+                        break;
+
+                    case CommandChooseFighters:
+                        ChooseFighters();
+                        break;
+
+                    case CommandStartFight:
+                        Fight(_fighter1, _fighter2);
+                        break;
+
+                    case CommandExit:
+                        isWork = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("\nНет такой команды");
+                        break;
+                }
+
+                Console.ReadKey();
+                Console.Clear();
+            }
+        }
+
+        private void CreateFighters()
+        {
+            _fighters.Add(new CrazyMax("Безумный макс", 120, 20, 20));
+            _fighters.Add(new TrevorPhillips("Тревор филипс", 100, 20, 10));
+            _fighters.Add(new WilliamBlaskowitz("Уильям бласковиц", 110, 30, 15));
+            _fighters.Add(new Kratos("Кратос", 130, 20, 15));
+            _fighters.Add(new Batman("Бетман", 140, 30, 10));
+        }
+
+        private bool TryGetFighter(out Fighter fighter)
+        {
+            fighter = null;
+
+            ShowFighters();
+
+            Console.Write("\nВыберите бойца: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int index))
+            {
+                Console.WriteLine("\nПожалуйста, введите число.");
+                return false;
+            }
+
+            index--;
+
+            if (index >= 0 && index < _fighters.Count && _fighters[index].Health > 0)
+            {
+                fighter = _fighters[index];
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("\nНет такого бойца.");
+                return false;
+            }
+        }
+
+        private void ChooseFighters()
+        {
+            _fighter1 = SelectFighter("Первый боец: ");
+
+            if (_fighter1 != null)
+            {
+                _fighter2 = SelectFighter("Второй боец: ", _fighter1);
+
+                if (_fighter2 == null)
+                {
+                    Console.WriteLine("\nОшибка, повторите выбор второго бойца.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("\nОшибка, повторите выбор первого бойца.");
+            }
+        }
+
+        private Fighter SelectFighter(string promptMessage, Fighter excludeFighter = null)
+        {
+            List<Fighter> availableFighters = _fighters
+            .Where(f => f != excludeFighter && f.Health > 0)
+            .ToList();
+            Fighter selectedFighter;
+            bool success = TryGetFighter(out selectedFighter);
+
+            if (!success || selectedFighter == null)
+            {
+                Console.WriteLine("\nНе удалось выбрать бойца. Попробуйте еще раз.");
+                return null;
+            }
+
+            DisplayFighterInfo(selectedFighter, promptMessage);
+            return selectedFighter;
+        }
+
+        private void DisplayFighterInfo(Fighter fighter, string message)
+        {
+            Console.WriteLine($"\n{message}");
+            fighter.ShowInfo();
+        }
+
+
+
+        private Fighter SelectValidFighter(Fighter excludeFighter = null)
+        {
+            while (true)
+            {
+                if (TryGetFighter(out Fighter fighter))
+                {
+
+                    if (excludeFighter == null || fighter != excludeFighter)
+                    {
+                        return fighter;
+                    }
+                }
+                else
+                {
+
+                    Console.WriteLine("Попробуй еще раз.");
+                }
+            }
+        }
+
+        private void Fight(Fighter fighter1, Fighter fighter2)
+        {
+
+            if (fighter1 == fighter2)
+            {
+                Console.WriteLine("\nБоец не может сражаться сам с собой!");
+                return;
+            }
+
+            _fighter1 = null;
+            _fighter2 = null;
+
+            if (fighter1 != null && fighter2 != null)
+            {
+                Console.WriteLine("\nБитва началась!\n");
+
+                while (fighter1.IsDead == false && fighter2.IsDead == false)
+                {
+                    if (ChooseAttackerFirst(fighter1, fighter2) == fighter1)
+                    {
+                        PerformAttack(fighter1, fighter2);
+                        PerformAttack(fighter2, fighter1);
+                    }
+                    else
+                    {
+                        PerformAttack(fighter2, fighter1);
+                        PerformAttack(fighter1, fighter2);
+                    }
+                }
+
+                Console.WriteLine("\nБитва окончена!");
+            }
+            else
+            {
+                Console.WriteLine("\nВыберите бойцов");
+            }
+        }
+
+        private Fighter ChooseAttackerFirst(Fighter fighter1, Fighter fighter2)
+        {
+            if (fighter1.RollDice(_random) >= fighter2.RollDice(_random))
+            {
+                return fighter1;
+            }
+
+            return fighter2;
+        }
+
+        private void PerformAttack(Fighter attacker, Fighter defender)
+        {
+            if (attacker.IsDead == false)
+            {
+                defender.TakeDamage(attacker.PerformAttack());
+
+                Console.WriteLine($"{attacker.Name} (HP:{attacker.Health}) нанес урон {defender.Name} (HP:{defender.Health})");
+
+                defender.ActivateSkill();
+                attacker.ActivateSkill();
+
+                if (defender.Health <= 0)
+                {
+                    Console.WriteLine($"\n{defender.Name} Убит!");
+                }
+            }
+        }
+
+        private void ShowAllСharacteristicsFighters()
+        {
+            int number = 0;
+
+            Console.Write("\n");
+
+            foreach (var fighter in _fighters)
+            {
+                number++;
+
+                Console.Write(number + " - ");
+                fighter.ShowInfo();
+            }
+        }
+
+        private void ShowFighters()
+        {
+            int number = 0;
+
+            Console.Write("\n");
+
+            foreach (var fighter in _fighters)
+            {
+                number++;
+
+                if (fighter.Health > 0)
+                {
+                    Console.WriteLine($"{number} - {fighter.Name}");
+                }
+            }
+        }
+    }
+
+    class Fighter
+    {
+        protected bool IsSkill = false;
+
+        public Fighter(string name, int health, int armor, int damage)
+        {
+            Name = name;
+            Health = health;
+            Armor = armor;
+            Damage = damage;
+        }
+
+        public string Name { get; protected set; }
+        public int Health { get; protected set; }
+        public int Armor { get; protected set; }
+        public int Damage { get; protected set; }
+        public bool IsDead => Health <= 0;
+
+        public int RollDice(Random random)
+        {
+            int maxValue = 105;
+
+            return random.Next(0, maxValue);
+        }
+
+        public virtual void TakeDamage(int damage) //тут изменил
+        {
+            int divider = 100;
+
+            Health -= damage - damage * Armor / divider;
+
+        }
+
+        public void ShowInfo()
+        {
+            if (Health <= 0)
+            {
+                Console.WriteLine($"Убит");
+                Console.WriteLine("----------------------------------------------------------------------------");
+            }
+            else
+            {
+                Console.WriteLine($"Класс бойца: {Name} \nЗдоровье: {Health} \nБроня: {Armor} \nУрон: {Damage}");
+                ShowSkill();
+                Console.WriteLine("----------------------------------------------------------------------------");
+            }
+        }
+
+
+        public virtual int PerformAttack()///
+        {
+            return Damage;
+        }
+
+        public virtual void ActivateSkill()//
+        {
+        }
+
+        protected virtual void ShowSkill()
+        {
+        }
+
+    }
+
+    class CrazyMax : Fighter
+    {
+        private const int MinimumHealthToActivateSkill = 10;
+        private bool isSkillActive;
+
+        public CrazyMax(string name, int health, int armor, int damage) : base(name, health, armor, damage)
+        {
+            isSkillActive = false;
+        }
+
+        public override void ActivateSkill()
+        {
+            if (Health < MinimumHealthToActivateSkill && !isSkillActive)
+            {
+                isSkillActive = true;
+                Console.WriteLine($"У {Name} активировано умение - урон увеличивается в 2 раза");
+            }
+        }
+
+        public override int PerformAttack()
+        {
+            int attackDamage = base.PerformAttack();
+
+
+            if (isSkillActive)
+            {
+                attackDamage *= 2;
+                Console.WriteLine($"{Name} наносит удар удвоенным уроном: {attackDamage}");
+            }
+
+            return attackDamage;
+        }
+
+        protected override void ShowSkill()
+        {
+            Console.Write("Умение: Если у бойца здоровье < 10, то его урон увеличивается в 2 раза\n");
+        }
+    }
+
+
+    class TrevorPhillips : Fighter
+    {
+        private Random random = new Random();
+        private const int MinimumHealthToActivateSkill = 20; 
+        private bool isSkillActive;
+        private int attackCounter; 
+
+        public TrevorPhillips(string name, int health, int armor, int damage) : base(name, health, armor, damage)
+        {
+            isSkillActive = false;
+            attackCounter = 0;
+        }
+
+        public override void ActivateSkill()
+        {
+            if (Health < MinimumHealthToActivateSkill && !isSkillActive)
+            {
+                isSkillActive = true;
+                Console.WriteLine($"У {Name} активировано умение - позволяет наносить двойной урон при каждой третьей атаке");
+            }
+        }
+
+        public override int PerformAttack()
+        {
+            int attackDamage = base.PerformAttack();
+
+            if (isSkillActive)
+            {
+                attackCounter++;
+                if (attackCounter % 3 == 0 && random.Next(100) < 50) 
+                {
+                    attackDamage *= 2;
+                    Console.WriteLine($"{Name} наносит удар удвоенным уроном: {attackDamage}");
+                }
+            }
+
+            return attackDamage;
+        }
+
+        protected override void ShowSkill()
+        {
+            Console.Write("Умение: Если у бойца здоровье < 20, то позволяет этому бойцу наносить двойной урон при каждой третьей атаке\n");
+        }
+    }
+
+    class WilliamBlaskowitz : Fighter
+    {
+        private const int MinimumHealthToActivateSkill = 40;
+        private int rage;
+        private const int RageConversionRate = 5; 
+
+        public WilliamBlaskowitz(string name, int health, int armor, int damage) : base(name, health, armor, damage) { }
+
+        public override void TakeDamage(int damage)
+        {
+            base.TakeDamage(damage);
+            
+            if (Health < MinimumHealthToActivateSkill)
+            {
+                rage++;
+                Console.WriteLine($"Ярость у {Name} накапливается... Текущее значение: {rage}");
+            }
+        }
+
+        public override void ActivateSkill()
+        {
+            
+            if (rage > 0)
+            {
+                Health += rage * RageConversionRate;
+                rage = 0;
+                Console.WriteLine($"Ярость у {Name} преобразована в здоровье. Текущее здоровье: {Health}");
+            }
+        }
+
+        protected override void ShowSkill()
+        {
+            Console.Write("Умение: Накапливает ярость, когда здоровье упало <  40, преобразует это в здоровье.\n");
+        }
+    }
+
+    class Kratos : Fighter
+    {
+        private const int MinimumHealthToUseMagic = 15; 
+        private const int ThunderDamage = 20; 
+        private bool isThunderActive; 
+
+        public Kratos(string name, int health, int armor, int damage) : base(name, health, armor, damage)
+        {
+            isThunderActive = false;
+        }
+
+        public override void ActivateSkill()
+        {
+            if (Health < MinimumHealthToUseMagic && !isThunderActive)
+            {
+                isThunderActive = true;
+                Console.WriteLine($"У {Name} сработало умение - использует магию и кидает молнию");
+            }
+        }
+
+        public void CastThunder(Fighter enemy)
+        {
+            if (isThunderActive)
+            {
+                enemy.TakeDamage(ThunderDamage);
+                Health += 30; 
+                Damage += 20; 
+                Console.WriteLine($"{Name} наносит молнию {enemy.Name}, урон: {ThunderDamage}. Здоровье Кратоса увеличено на +30, атака на +20.");
+            }
+        }
+
+        protected override void ShowSkill()
+        {
+            Console.Write("Умение: Использует магию при здоровье <  15, кидает молнию, которая даёт усиление жизни на +30 для вас и увеличивает атаку на +20\n");
+        }
+    }
+
+    class Batman : Fighter
+    {
+        private Random random = new Random();
+        private const int DodgeChancePercentage = 50; 
+        private const int HealthThreshold = 15; 
+        private int beatTracking;
+
+        public Batman(string name, int health, int armor, int damage) : base(name, health, armor, damage) { }
+
+        public override void TakeDamage(int damage)
+        {
+            if (Health <= HealthThreshold && beatTracking % 2 == 0)
+            {
+                Console.WriteLine($"{Name} уклонился от удара!");
+            }
+            else if (random.Next(100) < DodgeChancePercentage)
+            {
+                Console.WriteLine($"{Name} уклонился от удара!");
+            }
+            else
+            {
+                base.TakeDamage(damage);
+            }
+
+            beatTracking++;
+        }
+
+        protected override void ShowSkill()
+        {
+            Console.Write("Умение: С некоторой вероятностью уклоняется от входящего урона. Но когда здоровье < 15, уклоняется от каждого второго удара.\n");
+        }
+    }
+}
