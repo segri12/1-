@@ -1,0 +1,214 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace аааааааа
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Store store = new Store();
+
+            store.Work();
+        }
+    }
+
+    static class UserUtils  
+    {
+        private static Random s_random = new Random();
+
+        public static int GenerateRandomNumber(int min, int max)
+        {
+            return s_random.Next(min, max);
+        }
+    }
+
+    class Client
+    {
+        
+        private List<Product> _basket;
+        public int Wallet { get; private set; }
+
+        public Client(List<Product> basket)
+        {
+            int minimumMoneyCount = 60;
+            int maximumMoneyCount = 130;
+
+            Wallet = UserUtils.GenerateRandomNumber(minimumMoneyCount, maximumMoneyCount);
+
+            _basket = basket;
+        }
+
+        public void RemoveRandomProduct()
+        {
+            Product removeProduct = _basket[UserUtils.GenerateRandomNumber(0, _basket.Count)];
+            _basket.Remove(removeProduct);
+            Console.WriteLine($"Покупатель убирает из корзины '{removeProduct.Name}' стоимостью {removeProduct.Price}р.");
+        }
+
+        public int GetFullAmountOfProducts()
+        {
+            int costOfProducts = 0;
+
+            for (int i = 0; i < _basket.Count; i++)
+            {
+                costOfProducts += _basket[i].Price;
+            }
+
+            return costOfProducts;
+        }
+    }
+
+    class Product
+    {
+        public string Name { get; private set; }
+        public int Price { get; private set; }
+
+        public Product(string name, int price)
+        {
+            Name = name;
+            Price = price;
+        }
+    }
+
+    class Store
+    {
+        private List<Product> _products = new List<Product>();
+        private Queue<Client> _clients = new Queue<Client>();
+
+        public Store()
+        {
+            _products.Add(new Product("апельсин", 27));
+            _products.Add(new Product("сгущёнка", 30));
+            _products.Add(new Product("курица", 26));
+            _products.Add(new Product("яйца", 10));
+            _products.Add(new Product("майонез", 23));
+            _products.Add(new Product("жареная картошка", 8));
+            _products.Add(new Product("рыба красная", 76));
+            _products.Add(new Product("халапеньо ", 3));
+            _products.Add(new Product("сметана", 2));
+            _products.Add(new Product("тушёнка", 12));
+        }
+
+        public void Work()
+        {
+            CreateClientsQueue();  
+            ServeClients();  
+        }
+
+        private void CreateClientsQueue()  
+        {
+            while (_clients.Count <= 0)
+            {
+                Console.Write($"Введите кол-во клиентов: ");
+                string userInput = Console.ReadLine();
+
+                bool isNumber = int.TryParse(userInput, out int numberOfClients);
+
+                if (isNumber && numberOfClients > 0)
+                {
+                    Console.Clear();
+
+                    for (int i = 0; i < numberOfClients; i++)
+                    {            
+                        _clients.Enqueue(new Client(CreateClientBasket()));  
+                    }
+
+                    Console.WriteLine($"Очередь создана. В очереди {numberOfClients} чел.");
+                }
+                else
+                {
+                    Console.WriteLine("Неверная команда.");
+                }
+            }
+        }
+
+        private List<Product> CreateClientBasket()
+        {
+            List<Product> basket = new List<Product>();
+
+            int minimumNumberOfProducts = 1;
+            int maximumNumberOfProducts = _products.Count + 1;
+            int basketCapacity = UserUtils.GenerateRandomNumber(minimumNumberOfProducts, maximumNumberOfProducts);
+
+            for (int i = 0; i < basketCapacity; i++)
+            {
+                basket.Add(_products[UserUtils.GenerateRandomNumber(0, _products.Count)]);
+            }
+
+            return basket;
+        }
+
+        private void ServeClients()  
+        {
+            ConsoleKey powerButton = ConsoleKey.Enter;
+
+            Console.Write($"Чтобы начать обслуживание клиентов нажмите {powerButton}.");
+
+            PressEnter(powerButton);
+
+            int countClients = 0;
+
+            while (_clients.Count > 0)
+            {
+                Console.Clear();
+
+                Client client = _clients.Dequeue();
+
+                bool isClientServed = false;
+
+                countClients++;
+
+                while (isClientServed == false)
+                {
+                    int costOfProducts = client.GetFullAmountOfProducts();  
+
+                    Console.WriteLine($"Клиент №{countClients}. Сумма всех товаров в корзине = {costOfProducts}р.");
+
+                    if (client.Wallet < costOfProducts)
+                    {
+                        ShowColoredText(ConsoleColor.DarkCyan, $"У клиента {client.Wallet}р. - этого недостаточно для оплаты товаров.");
+
+                        client.RemoveRandomProduct();
+                    }
+                    else
+                    {
+                        ShowColoredText(ConsoleColor.DarkGreen, $"У клиента {client.Wallet}р., он оплатил товары на сумму {costOfProducts}р.\n");
+
+                        isClientServed = true;
+                    }
+
+                    ShowColoredText(ConsoleColor.DarkYellow, $"Нажмите {powerButton}, чтобы продолжить.");
+
+                    PressEnter(ConsoleKey.Enter);
+                }
+            }
+        }
+
+        private void PressEnter(ConsoleKey desiredKey)
+        {
+            ConsoleKeyInfo key;
+            do
+            {
+                key = Console.ReadKey(true);
+                if (key.Key != desiredKey)
+                {
+                    Console.WriteLine("\nНажмите {Enter}, чтобы продолжить.", desiredKey);
+                }
+            }
+            while (key.Key != desiredKey);
+
+            Console.WriteLine();
+        }
+
+        private void ShowColoredText(ConsoleColor color, string text)
+        {
+            Console.ForegroundColor = color;
+            Console.WriteLine(text);
+            Console.ResetColor();
+        }
+    }
+}
