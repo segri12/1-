@@ -1,0 +1,424 @@
+using System.Collections.Generic;
+using System;
+
+namespace ООП_10_солдаты_б
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Battlefield battlefield = new Battlefield();
+            battlefield.Battle();
+        }
+    }
+
+    public abstract class MilitaryUnit 
+    {
+        public int Health { get; protected set; }
+        public int Damage { get; protected set; }
+        public int Armor { get; protected set; }
+
+        protected MilitaryUnit(int health, int damage, int armor)
+        {
+            Health = health;
+            Damage = damage;
+            Armor = armor;
+        }
+
+        public abstract void TakeDamage(int damage);
+
+        public virtual void Attack(MilitaryUnit target)
+        {
+            target.TakeDamage(Damage);
+        }
+
+        public virtual string GetUnitType()
+        {
+            return GetTypeName();
+        }
+
+        protected virtual string GetTypeName()
+        {
+            return "Военное подразделение";
+        }
+
+        public virtual void ShowInfo()
+        {
+            Console.WriteLine($"{GetUnitType()} - Жизни: {Health}, Урон: {Damage}, Броня: {Armor}");
+        }
+    }
+
+    public abstract class Soldier : MilitaryUnit
+    {
+        protected Soldier(int health, int damage, int armor) : base(health, damage, armor) { }
+
+        public abstract bool CanUseSpecialAbility { get; }
+
+        public override void Attack(MilitaryUnit target)
+        {
+            if (CanUseSpecialAbility)
+            {
+                SpecialAttack(target);
+            }
+            else
+            {
+                target.TakeDamage(Damage);
+            }
+        }
+
+        public abstract void SpecialAttack(MilitaryUnit target);
+    }
+
+    class Battlefield  
+    {
+        private Army _firstArmy = new Army("Америка"); 
+        private Army _secondArmy = new Army("Русские");
+
+        public void Battle()
+        {
+            while (_firstArmy.GetSoldiersListCount > 0 && _secondArmy.GetSoldiersListCount > 0) 
+            {
+                Console.Clear();
+
+                _firstArmy.ShowInfo();
+                _secondArmy.ShowInfo();
+
+                _firstArmy.AttackSoldier(_secondArmy);
+                _secondArmy.RemoveDeadSoldier();
+
+                if (_secondArmy.GetSoldiersListCount > 0)  
+                {
+                    _secondArmy.AttackSoldier(_firstArmy);
+                    _firstArmy.RemoveDeadSoldier();
+                }
+
+                Console.WriteLine("Нажмите любую клавишу, чтобы продолжить.");
+                Console.ReadKey();
+            }
+
+            DisplayBattleResult();  
+        }
+
+        private void DisplayBattleResult()
+        {
+            if (_firstArmy.GetSoldiersListCount > _secondArmy.GetSoldiersListCount)
+            {
+                Console.Clear();
+                ShowColoredText(ConsoleColor.Green, $"{_firstArmy.NameOfCountry} Америкосы абэма одержал победу!");
+            }
+            else
+            {
+                Console.Clear();
+                ShowColoredText(ConsoleColor.Green, $"{_secondArmy.NameOfCountry} РОССИЯ победила!");
+            }
+        }
+
+        private void ShowColoredText(ConsoleColor color, string text)  
+        {
+            Console.ForegroundColor = color;
+            Console.WriteLine(text);
+            Console.ResetColor();
+        }
+    }
+
+    class Army
+    {
+        private List<Soldier> _soldiers = new List<Soldier>();          
+
+        public string NameOfCountry { get; private set; }
+
+        public int GetSoldiersListCount => _soldiers.Count;
+
+        public Army(string nameOfCountry)  
+        {
+            NameOfCountry = nameOfCountry;
+
+            CreatePlatoon<Infantryman>(1, 3);
+            CreatePlatoon<Sniper>(1, 3);
+            CreatePlatoon<Grenadelauncher>(1, 3);
+            CreatePlatoon<Tank>(1, 3);
+        }
+
+        public void ShowInfo()
+        {
+            Console.WriteLine(NameOfCountry + ".");
+
+            for (int i = 0; i < _soldiers.Count; i++)
+            {
+                Console.Write($"{i + 1}.");
+                _soldiers[i].ShowInfo();
+            }
+
+            Console.WriteLine();
+        }
+
+        public void AttackSoldier(Army enemyArmy)
+        {
+            if (enemyArmy.GetSoldiersListCount == 0)
+            {
+                return;
+            }
+
+            Soldier attackingSoldier = GetRandomSoldier();
+            Soldier defendingSoldier = enemyArmy.GetRandomSoldier();
+
+            attackingSoldier.Attack(defendingSoldier);
+        }
+
+        public void RemoveDeadSoldier()
+        {
+            _soldiers.RemoveAll(soldier => soldier.Health <= 0);
+        }
+
+        public void AddSoldier(Soldier soldier)
+        {
+            _soldiers.Add(soldier);
+        }
+
+        private Soldier GetRandomSoldier()
+        {
+            return _soldiers[UserUtils.GenerateRandomNumber(0, _soldiers.Count)];
+        }
+
+        private void CreatePlatoon<TroopType>(int minimumSoldier, int maximumSoldier) where TroopType : Soldier, new()
+        {
+            int randomNumberOfSoldier = UserUtils.GenerateRandomNumber(minimumSoldier, maximumSoldier);
+
+            for (int i = 0; i < randomNumberOfSoldier; i++)
+            {
+                TroopType soldier = new TroopType();
+                AddSoldier(soldier);
+            }
+        }
+    }
+
+    class Infantryman : Soldier
+    {
+        private int _healthTrigger = 10;
+
+        public Infantryman() : base(60, 12, 10)
+        {
+        }
+
+        public override void TakeDamage(int damage)
+        {
+            if (Armor >= damage)
+            {
+                Console.WriteLine("Урон не прошёл.");
+            }
+            else
+            {
+                Health -= damage - Armor;
+            }
+
+            if (Health < 0)
+            {
+                Health = 0;
+            }
+        }
+
+        public override bool CanUseSpecialAbility => Health <= _healthTrigger;
+
+        public override void Attack(MilitaryUnit target)
+        {
+            if (CanUseSpecialAbility)
+            {
+                SpecialAttack(target);
+            }
+            else
+            {
+                target.TakeDamage(Damage);
+            }
+        }
+
+        public override void SpecialAttack(MilitaryUnit target)
+        {
+            target.TakeDamage(Damage);
+            target.TakeDamage(Damage);
+
+            Console.WriteLine("Двойной урон.");
+        }
+
+        protected override string GetTypeName()
+        {
+            return "Пехотинец";
+        }
+    }
+
+    class Sniper : Soldier
+    {
+        private int _healthTrigger = 15;
+
+        public Sniper() : base(40, 30, 3)
+        {
+        }
+
+        public override void TakeDamage(int damage)
+        {
+            Random random = new Random();
+
+            int maximumRandomNumber = 4;
+            int multiplicityOfChances = 3;
+
+            if (Health <= _healthTrigger)
+            {
+                if (random.Next(maximumRandomNumber) == multiplicityOfChances)
+                {
+                    Console.WriteLine("Уклонение.");
+                    return;
+                }
+            }
+
+            if (Armor >= damage)
+            {
+                Console.WriteLine("Урон не прошёл.");
+            }
+            else
+            {
+                Health -= damage - Armor;
+            }
+
+            if (Health < 0)
+            {
+                Health = 0;
+            }
+        }
+
+        public override bool CanUseSpecialAbility => Health <= _healthTrigger;
+
+        public override void Attack(MilitaryUnit target)
+        {
+            if (CanUseSpecialAbility)
+            {
+                SpecialAttack(target);
+            }
+            else
+            {
+                target.TakeDamage(Damage);
+            }
+        }
+
+        public override void SpecialAttack(MilitaryUnit target)
+        {
+            target.TakeDamage(Damage * 2);
+
+            Console.WriteLine("Урон удвоен.");
+        }
+
+        protected override string GetTypeName()
+        {
+            return "Снайпер";
+        }
+    }
+
+    class Grenadelauncher : Soldier
+    {
+        private int _healthTrigger = 15;
+        private int _extraDamage = 5;
+
+        public Grenadelauncher() : base(30, 40, 3)
+        {
+        }
+
+        public override void TakeDamage(int damage)
+        {
+            if (Armor >= damage)
+            {
+                Console.WriteLine("Урон не прошёл.");
+            }
+            else
+            {
+                Health -= damage - Armor;
+            }
+
+            if (Health < 0)
+            {
+                Health = 0;
+            }
+        }
+
+        public override bool CanUseSpecialAbility => Health <= _healthTrigger;
+
+        public override void Attack(MilitaryUnit target)
+        {
+            if (CanUseSpecialAbility)
+            {
+                SpecialAttack(target);
+            }
+            else
+            {
+                target.TakeDamage(Damage);
+            }
+        }
+
+        public override void SpecialAttack(MilitaryUnit target)
+        {
+            target.TakeDamage(Damage + _extraDamage);
+
+            Console.WriteLine($"Дополнительный урон: +{_extraDamage}.");
+        }
+
+        protected override string GetTypeName()
+        {
+            return "Гранатомётчик";
+        }
+    }
+
+    class Tank : Soldier
+    {
+        public Tank() : base(100, 60, 20)
+        {
+        }
+
+        public override void TakeDamage(int damage)
+        {
+            if (Armor >= damage)
+            {
+                Console.WriteLine("Урон не прошёл.");
+            }
+            else
+            {
+                Health -= damage - Armor;
+            }
+
+            if (Health < 0)
+            {
+                Health = 0;
+            }
+        }
+
+        public override bool CanUseSpecialAbility => false;
+
+        public override void Attack(MilitaryUnit target)
+        {
+            if (CanUseSpecialAbility)
+            {
+                SpecialAttack(target);
+            }
+            else
+            {
+                target.TakeDamage(Damage);
+            }
+        }
+
+        public override void SpecialAttack(MilitaryUnit target)
+        {            
+            target.TakeDamage(Damage);
+        }
+
+        protected override string GetTypeName()
+        {
+            return "Танк";
+        }
+    }
+
+    public static class UserUtils
+    {
+        private static readonly Random _random = new Random();
+
+        public static int GenerateRandomNumber(int min, int max)
+        {
+            return _random.Next(min, max);
+        }
+    }
+}
