@@ -1,0 +1,193 @@
+using System;
+using System.Collections.Generic;
+
+
+namespace ООП_12_вольер_с_животными_б
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Zoo zoo = new Zoo();
+            zoo.RunGameLoop();
+        }
+    }
+
+    class Animal
+    {
+        public Animal(string name, int dangerValue)
+        {
+            Name = name;
+            DangerValue = dangerValue;
+            GenerateGender();
+        }
+
+        public int DangerValue { get; private set; }
+        public string Name { get; private set; }
+        public string Gender { get; private set; }
+
+        private void GenerateGender()
+        {
+            string[] genders = { "Мужской", "Женский" };
+            int randomIndex = UserUtils.GenerateRandomNumber(0, genders.Length);
+            Gender = genders[randomIndex];
+        }
+    }
+
+    class Zoo
+    {
+        private List<Fence> _animalEnclosures = new List<Fence>(); 
+        
+        private List<Type> _animalTypes = new List<Type>()
+        {
+            typeof(Tiger),
+            typeof(Giraffe),
+            typeof(Leopard),
+            typeof(Elephant)
+        };
+
+        public Zoo()
+        {
+            for (int i = 0; i < _animalTypes.Count; i++)
+            {
+                Animal animal = (Animal)Activator.CreateInstance(_animalTypes[i]);
+                _animalEnclosures.Add(new Fence(animal));
+            }            
+        }
+
+        public void RunGameLoop()
+        {
+            const string CommandShowAviaries = "1";
+            const string CommandSelectAviary = "2";
+            const string CommandExit = "3";
+
+            bool isRunGameLoop = true;
+
+            while (isRunGameLoop)
+            {
+                Console.WriteLine($"{CommandShowAviaries} - показать все вольеры");
+                Console.WriteLine($"{CommandSelectAviary} - выбрать вольер");
+                Console.WriteLine($"{CommandExit} - выйти");
+                Console.Write("\nВыберите пункт меню: ");
+                string userInput = Console.ReadLine();
+
+                switch (userInput)
+                {
+                    case CommandShowAviaries:
+                        ShowInformation();
+                        break;
+
+                    case CommandSelectAviary:
+                        AviarySelection();
+                        break;
+
+                    case CommandExit:
+                        isRunGameLoop = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("\nНет такой команды");
+                        break;
+                }
+
+                Console.ReadKey();
+                Console.Clear();
+            }
+        }
+
+        private void AviarySelection()
+        {
+            Console.Write("Введите номер вольера: ");
+            if (int.TryParse(Console.ReadLine(), out int numberOfAviary))
+            {
+                AviarySelection(numberOfAviary);
+            }
+            else
+            {
+                Console.WriteLine("Неверная команда.");
+            }
+        }
+
+        private void AviarySelection(int numberOfAviary)
+        {
+            if (numberOfAviary <= 0 || numberOfAviary > _animalEnclosures.Count)
+            {
+                Console.WriteLine($"Вольера под №{numberOfAviary} не существует.");
+            }
+            else
+            {
+                Console.Clear();
+                _animalEnclosures[numberOfAviary - 1].ShowInformation();
+            }
+        }
+
+        private void ShowInformation()
+        {
+            for (int i = 0; i < _animalEnclosures.Count; i++)
+            {
+                Console.WriteLine($"Вольер №{i + 1}.");
+            }
+        }
+    }
+
+    class Fence
+    {
+        private List<Animal> _animals = new List<Animal>();
+
+        public Fence(Animal animal)
+        {
+            Create(animal);
+        }
+
+        public void ShowInformation()
+        {
+            Console.WriteLine($"В вольере находится {_animals.Count} животных:");
+            for (int i = 0; i < _animals.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}. {_animals[i].Name}, пол - {_animals[i].Gender}, уровень опасности - {_animals[i].DangerValue}");
+            }
+        }
+
+        private void Create(Animal animal)
+        {
+            int minimumNumberOfAnimal = 1;
+            int maximumNumberOfAnimal = 10;
+            int numberOfAnimal = UserUtils.GenerateRandomNumber(minimumNumberOfAnimal, maximumNumberOfAnimal);
+
+            for (int i = 0; i < numberOfAnimal; i++)
+            {
+                _animals.Add(new Animal(animal.Name, animal.DangerValue));
+            }
+        }
+    }
+
+    class Tiger : Animal
+    {
+        public Tiger() : base("Тигр", 9) { }
+    }
+
+    class Giraffe : Animal
+    {
+        public Giraffe() : base("Жираф", 7) { }
+    }
+
+    class Leopard : Animal
+    {
+        public Leopard() : base("Леопард", 8) { }
+    }
+
+    class Elephant : Animal
+    {
+        public Elephant() : base("Слон", 2) { }
+    }
+
+    static class UserUtils
+    {
+        private static readonly Random s_random = new Random();
+
+        public static int GenerateRandomNumber(int min, int max)
+        {
+            return s_random.Next(min, max);
+        }
+    }
+}
