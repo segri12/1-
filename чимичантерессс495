@@ -1,0 +1,182 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace LINQ__Арстоцка__страна
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Menu menu = new Menu();
+            menu.RunGameLoop();
+        }
+    }
+
+    class Menu
+    {
+        private List<Prisoner> _listPrisoners = new List<Prisoner>();
+
+        public Menu()
+        {
+            GeneratePrisoners();
+        }
+
+        public void RunGameLoop()
+        {
+            const string CommandMakeAmnesty = "1";
+            const string CommandShowInfo = "2";
+            const string CommandExitMenu = "3";
+
+            bool isRunGameLoop = true;
+
+            while (isRunGameLoop)
+            {
+                Console.WriteLine("Меню поиска великой стране Арстоцка:");
+                Console.WriteLine($"{CommandMakeAmnesty} - запустить амнистию");
+                Console.WriteLine($"{CommandShowInfo} - показать всех преступников в тюрьме");
+                Console.WriteLine($"{CommandExitMenu} - выход");
+
+                Console.Write("\nВведите команду: ");
+                string userInput = Console.ReadLine();
+
+                switch (userInput)
+                {
+                    case CommandMakeAmnesty:
+                        MakeAmnesty();
+                        break;
+
+                    case CommandShowInfo:
+                        ShowPrisoners();
+                        break;
+
+                    case CommandExitMenu:
+                        isRunGameLoop = false;
+                        break;
+
+                    default:
+                        break;
+                }
+
+                Console.ReadKey();
+                Console.Clear();
+            }
+        }
+
+        private void GeneratePrisoners()
+        {
+            string[] names = new string[]
+            {
+                "Гаврилов Игорь Аркадьевич",
+                "Макаров Сергей Иванович",
+                "Гришин Николай  Антонович",
+                "Никонов Сергей Викторович",
+                "Евсеев Ростислав Егорович",
+                "Константинов Илья  Алексеевич",
+                "Туров Юстиниан Романович",
+                "Тимофеев Терентий Антонович",
+                "Рыбаков Артём Валентинович",
+                "Герасимов Пётр Константинович",
+                "Евдокимов Сергей Созонович",
+                "Макаров Сергей Леонидович",
+                "Семёнов Егор Богданович",
+                "Михеев Антон Романович",
+                "Новиков Руслан Сергеевич",
+                "Панов Илья Пантелеймонович",
+                "Зимин Антон Антонинович",
+                "Кузьмин Павел Романович",
+                "Овчинников Платон Проклович",
+                "Федосеев Константин Андреевич",
+                "Михновец Александр Сергеевич"  //Надеюсь отгадал  если что это шутка 
+            };
+
+            string[] offencies = new string[]
+            {
+                "Антиправительственное",
+                "Нанесение побоев",
+                "Незаконное хранение оружия",
+                "Убийство",
+                "Мошенничество",
+                "Коррупция",
+                "Хулиганство",
+                "Изнасилование",
+                "Разбой",
+                "Кража",
+                "Вымогательство",
+                "Поджог",
+                "Уклонение от уплаты налогов",
+                "Незаконный оборот наркотиков",
+                "Похищение человека",
+                "Угон транспортного средства",
+                "Взлом",
+                "Подделка документов",
+                "Злоупотребление полномочиями",
+                "Неоказание помощи потерпевшему",
+                "Нарушение правил дорожного движения",
+                "Незаконная охота",
+                "Незаконная вырубка леса"
+            };
+
+            foreach (var name in names)
+            {
+                string offence = offencies[UserUtils.GenerateRandomNumber(0, offencies.Length)];
+
+                _listPrisoners.Add(new Prisoner(name, offence));
+            }
+        }
+
+        private void ShowPrisoners()
+        {
+            int index = 0;
+
+            Console.WriteLine("\nСписок преступников:");
+
+            foreach (var prisoner in _listPrisoners)
+            {
+                Console.Write(++index + ". ");
+                prisoner.ShowInfo();
+            }
+        }
+
+        private void MakeAmnesty()
+        {
+            string amnestyForOffence = "Антиправительственное";
+
+            var findedPrisoners = _listPrisoners.Where(prisoner => prisoner.Offence == amnestyForOffence).ToList();
+
+            foreach (var prisoner in findedPrisoners)
+            {
+                _listPrisoners.Remove(prisoner);
+            }
+        }
+    }
+
+    class Prisoner
+    {
+        public Prisoner(string name, string offence)
+        {
+            Name = name;
+            Offence = offence;
+        }
+
+        public string Name { get; private set; }
+        public string Offence { get; private set; }
+
+        public void ShowInfo()
+        {
+            Console.WriteLine($"Имя: {Name}, Преступление: {Offence}");
+        }
+    }
+
+    static class UserUtils
+    {
+        private static readonly Random s_random = new Random();
+
+        public static int GenerateRandomNumber(int min, int max)
+        {
+            return s_random.Next(min, max);
+        }
+    }
+}
