@@ -1,0 +1,146 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LINQ_набор_тушенки
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Request request = new Request();
+            request.RunGameLoop();
+        }
+    }
+
+    class Request
+    {
+        private List<Stew> _stews = new List<Stew>();
+
+        public Request()
+        {
+            GenerateStews();
+        }
+
+        public void RunGameLoop()
+        {
+            const string CommandShowAllStews = "1";
+            const string CommandShowOverdueStews = "2";
+            const string CommandExit = "3";
+
+            bool isRunGameLoop = true;
+
+            while (isRunGameLoop)
+            {
+                Console.WriteLine("Выберите один из пунктов, помогите солдатом с полылкой чтоб они не траванулись:");
+                Console.WriteLine($"{CommandShowAllStews} - показать все банки с тушенкой;");
+                Console.WriteLine($"{CommandShowOverdueStews} - показать просрочку;");
+                Console.WriteLine($"{CommandExit} - Выйти из системы.");
+                Console.Write("Введите команду: ");
+                string userIpnut = Console.ReadLine();
+
+                switch (userIpnut)
+                {
+                    case CommandShowAllStews:
+                        ShowStews(_stews);
+                        break;
+
+                    case CommandShowOverdueStews:
+                        ShowOverdueStews();
+                        break;
+
+                    case CommandExit:
+                        Console.WriteLine("Выход из системы.");
+                        isRunGameLoop = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("Такого пункта меню нет");
+                        break;
+                }
+
+                Console.ReadKey();
+                Console.Clear();
+            }
+        }
+
+        private void GenerateStews()
+        {
+            int minYearOfProduction = 2000;
+            int maxYearOfProduction = 2024;
+
+            int minStorageLife = 10;
+            int maxStorageLife = 20;
+
+            int minCount = 10;
+            int maxCount = 99;
+
+            int count = UserUtils.GenerateRandomNumber(minCount, maxCount);
+
+            string[] names = new string[]
+            {
+                "Говяжья высшее (отборное)",
+                "Свиная среднее (качество)",
+                "Куриная низшее (дешевое)"
+            };
+
+            for (int i = 0; i < count; i++)
+            {
+                string name = names[UserUtils.GenerateRandomNumber(0, names.Length)];
+                int yearOfProduction = UserUtils.GenerateRandomNumber(minYearOfProduction, maxYearOfProduction);
+                int storageLife = UserUtils.GenerateRandomNumber(minStorageLife, maxStorageLife);
+
+                _stews.Add(new Stew(name, yearOfProduction, storageLife));
+            }
+        }
+
+        private void ShowOverdueStews()
+        {
+            int currentYear = DateTime.Now.Year;
+
+            var findOverdueStews = _stews.Where(stew => stew.YearOfProduction + stew.StorageLife < currentYear).ToList();
+
+            ShowStews(findOverdueStews);
+        }
+
+        private void ShowStews(List<Stew> stews)
+        {
+            int index = 0;
+
+            foreach (var stew in stews)
+            {
+                Console.Write($"{++index}. ");
+                stew.ShowInfo();
+            }
+        }
+    }
+
+    class Stew
+    {
+        public Stew(string name, int yearOfProduction, int storageLife)
+        {
+            Name = name;
+            YearOfProduction = yearOfProduction;
+            StorageLife = storageLife;
+        }
+
+        public string Name { get; private set; }
+        public int YearOfProduction { get; private set; }
+        public int StorageLife { get; private set; }
+
+        public void ShowInfo()
+        {
+            Console.WriteLine($"Наименование: {Name}, Год производства: {YearOfProduction}, Срок хранения: {StorageLife}");
+        }
+    }
+
+    static class UserUtils
+    {
+        private static readonly Random s_random = new Random();
+
+        public static int GenerateRandomNumber(int min, int max)
+        {
+            return s_random.Next(min, max);
+        }
+    }
+}
