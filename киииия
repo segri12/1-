@@ -1,0 +1,162 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LINQ__список_всех_игроков
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Board board = new Board();
+            board.RunGameLoop();
+        }
+    }
+
+    class Board
+    {        
+        private List<Player> _players = new List<Player>();
+
+        public Board()
+        {
+            GeneratePlayers();
+        }
+
+        public void RunGameLoop()
+        {
+            const string CommandShowTopByLevel = "1";
+            const string CommandShowTopByStrength = "2";
+            const string CommandShowAllPlayers = "3";
+            const string CommandExit = "4";
+
+            bool isRunGameLoop = true;
+
+            while (isRunGameLoop)
+            {
+                Console.WriteLine("Выберите один из пунктов чтобы узнать кто будет лучшим!");
+                Console.WriteLine($"{CommandShowTopByLevel} - показать топ-3 игроков по уровню;");
+                Console.WriteLine($"{CommandShowTopByStrength} - показать топ-3 игроков по силе;");
+                Console.WriteLine($"{CommandShowAllPlayers} - показать всех игроков;");
+                Console.WriteLine($"{CommandExit} - Выйти из системы.");
+                Console.Write("Введите команду: ");
+                string userIpnut = Console.ReadLine();
+
+                switch (userIpnut)
+                {
+                    case CommandShowTopByLevel:
+                        ShowPlayers(GetTopByLevel());
+                        break;
+
+                    case CommandShowTopByStrength:
+                        ShowPlayers(GetTopByStrength());
+                        break;
+
+                    case CommandShowAllPlayers:
+                        ShowPlayers(_players);
+                        break;
+
+                    case CommandExit:
+                        Console.WriteLine("Выход из системы.");
+                        isRunGameLoop = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("Такого пункта меню нет");
+                        break;
+                }
+
+                Console.ReadKey();
+                Console.Clear();
+            }
+        }
+
+        private void GeneratePlayers()
+        {
+            string[] names = new string[]
+            {
+                "Иван",
+                "Сергей",
+                "Александр",
+                "Максим",
+                "Николай",
+                "Дмитрий",
+                "Михаил",
+                "Андрей",
+                "Алексей",
+                "Даниил",
+                "Анастасия",
+                "Екатерина",
+                "Елена",
+                "Мария",
+                "Ольга",
+                "Софья",
+                "Виктория",
+                "Анна",
+            };
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                int minValue = 1;
+                int maxValue = 99;
+
+                int level = UserUtils.GenerateRandomNumber(minValue, maxValue);
+                int strength = UserUtils.GenerateRandomNumber(minValue, maxValue);
+
+                _players.Add(new Player(names[i], level, strength));
+            }
+        }
+        private List<Player> GetTopByStrength()
+        {
+            int topPlayers = 3;
+
+            return _players.OrderByDescending(player => player.Strength).Take(topPlayers).ToList();
+        }
+
+        private List<Player> GetTopByLevel()
+        {
+            int topPlayers = 3;
+
+            return _players.OrderByDescending(player => player.Level).Take(topPlayers).ToList();
+        }
+
+        private void ShowPlayers(List<Player> players)
+        {
+            int index = 0;
+
+            foreach (var player in players)
+            {
+                Console.Write($"{++index}. ");
+                player.ShowInfo();
+            }
+        }
+    }
+
+    class Player
+    {
+        public Player(string name, int level, int strength)
+        {
+            Name = name;
+            Level = level;
+            Strength = strength;
+        }
+
+        public string Name { get; private set; }
+        public int Level { get; private set; }
+        public int Strength { get; private set; }
+
+        public void ShowInfo()
+        {
+            Console.WriteLine($"Имя: {Name}, Уровень: {Level}, Сила: {Strength}");
+        }
+    }
+
+    static class UserUtils
+    {
+        private static readonly Random s_random = new Random();
+
+        public static int GenerateRandomNumber(int min, int max)
+        {
+            return s_random.Next(min, max);
+        }
+    }
+}
