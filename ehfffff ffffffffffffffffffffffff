@@ -1,0 +1,155 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LINQ_солдатские_переводы_мазаные_москвичи
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Request request = new Request();
+            request.RunGameLoop();
+        }
+    }
+
+    class Request
+    {
+        private List<Soldier> _squadFirst = new List<Soldier>();
+        private List<Soldier> _squadTwo = new List<Soldier>();
+
+        public Request()
+        {
+            GenerateSquads();
+        }
+
+        public void RunGameLoop()
+        {
+            const string CommandShowSquad1 = "1";
+            const string CommandShowSquad2 = "2";
+            const string CommandRegrouping = "3";
+            const string CommandExit = "4";
+
+            bool isRunGameLoop = true;
+
+            while (isRunGameLoop)
+            {
+                Console.WriteLine("Выберите один из пунктов чтобы перевести мазоного парня:");
+                Console.WriteLine($"{CommandShowSquad1} - показать первый отряд;");
+                Console.WriteLine($"{CommandShowSquad2} - показать второй отряд;");
+                Console.WriteLine($"{CommandRegrouping} - перевести из 1-го отряда во 2-ой отряд всех солдат с фамилий на 'Б'");
+                Console.WriteLine($"{CommandExit} - Выйти из системы.");
+                Console.Write("Введите команду: ");
+                string userIpnut = Console.ReadLine();
+
+                switch (userIpnut)
+                {
+                    case CommandShowSquad1:
+                        ShowSoldiers(_squadFirst);
+                        break;
+
+                    case CommandShowSquad2:
+                        ShowSoldiers(_squadTwo);
+                        break;
+
+                    case CommandRegrouping:
+                        Regroup();
+                        break;
+
+                    case CommandExit:
+                        Console.WriteLine("Выход из системы.");
+                        isRunGameLoop = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("Такого пункта меню нет");
+                        break;
+                }
+
+                Console.ReadKey();
+                Console.Clear();
+            }
+        }
+
+        private void GenerateSquads()
+        {
+            List<string> names = new List<string>
+            {
+                        "Быков Андрей Максимович",
+                        "Петрова Валерия Андреевна",
+                        "Бобров Андрей Генадьевич",
+                        "Измайлова Елизавета Эмировна",
+                        "Бочаров Сергей Анатольвич",
+                        "Касаткин Григорий Андреевич",
+                        "Белов Джитрий Алексеевич",
+                        "Пирогова Виктория Данииловна",
+                        "Минин Дмитрий Григорьевич",
+                        "Баранова Алиса Дамировна",
+                        "Кириллов Александр Семёнович",
+                        "Богданова Ксения Тимуровна",
+                        "Соловьев Арсений Денисович",
+                        "Большаков Владимир Львович",
+                        "Егоров Александр Денисович",
+                        "Быстров Кирил Александрович",
+                        "Наумов Максим Леонидович",
+                        "Кононов Марк Михайлович",
+                        "Богданов Юрий Тихонович",
+                        "Булатов Фёдор Максимович",
+                        "Федоров Никита Иванович"
+            };
+
+            foreach (var name in names)
+            {
+                int _divider = 2;
+                int maxCount = names.Count / _divider;
+
+                if (_squadFirst.Count < maxCount)
+                {
+                    _squadFirst.Add(new Soldier(name));
+                }
+                else
+                {
+                    _squadTwo.Add(new Soldier(name));
+                }
+            }
+        }
+
+        private void Regroup()
+        {
+            string letter = "Б";
+
+            var filtredSoldiers = _squadFirst.Where(soldier => soldier.Name.StartsWith(letter)).ToList();
+
+            _squadFirst = _squadFirst.Except(filtredSoldiers).ToList();
+            _squadTwo = _squadTwo.Union(filtredSoldiers).ToList();
+
+            Console.WriteLine("Всех с фамилией на Б из 1-отряда перевели во 2-ой отряд");
+        }
+
+        private void ShowSoldiers(List<Soldier> soldiers)
+        {
+            int index = 0;
+
+            foreach (var soldier in soldiers)
+            {
+                Console.Write($"{++index}. ");
+                soldier.ShowInfo();
+            }
+        }
+    }
+
+    class Soldier
+    {
+        public Soldier(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; private set; }
+
+        public void ShowInfo()
+        {
+            Console.WriteLine($"Имя: {Name}");
+        }
+    }     
+}
