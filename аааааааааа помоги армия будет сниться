@@ -1,0 +1,181 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LINQ_класс_солдата_и_записи_короче_собака_Палова_писарь
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Request request = new Request();
+            request.RunGameLoop();
+        }
+    }
+
+    class Request
+    {
+        private List<Soldier> _soldiers = new List<Soldier>();
+
+        public Request()
+        {
+            GenerateSoldiers();
+        }
+
+        public void RunGameLoop()
+        {
+            const string CommandShowFullInfo = "1";
+            const string CommandShowNameAndRank = "2";
+            const string CommandExit = "3";
+
+            bool isRunGameLoop = true;
+
+            while (isRunGameLoop)
+            {
+                Console.WriteLine("Выберите один из пунктов В/Ч 75384: Семеновский полк");
+                Console.WriteLine($"{CommandShowFullInfo} - показать всю информацию по солдатам;");
+                Console.WriteLine($"{CommandShowNameAndRank} - показать только имена и звания солдат;");
+                Console.WriteLine($"{CommandExit} - выйти из системы.");
+                Console.Write("Введите команду: ");
+                string userIpnut = Console.ReadLine();
+
+                switch (userIpnut)
+                {
+                    case CommandShowFullInfo:
+                        ShowSoldiers();
+                        break;
+
+                    case CommandShowNameAndRank:
+                        ShowNameAndRank();
+                        break;
+
+                    case CommandExit:
+                        Console.WriteLine("Выход из системы.");
+                        isRunGameLoop = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("Такого пункта меню нет");
+                        break;
+                }
+
+                Console.ReadKey();
+                Console.Clear();
+            }
+        }
+
+        private void GenerateSoldiers()
+        {
+            string[] names = new string[]
+            {
+                "Иван",
+                "Сергей",
+                "Александр",
+                "Максим",
+                "Николай",
+                "Дмитрий",
+                "Михаил",
+                "Андрей",
+                "Алексей",
+                "Даниил",
+                "Анастасия",
+                "Екатерина",
+                "Елена",
+                "Мария",
+                "Ольга",
+                "Софья",
+                "Виктория",
+                "Анна",
+            };
+
+            string[] weapons = new string[]
+            {
+                "АК-47",
+                "ПМ",
+                "СВД",
+                "Винторез",
+                "ГШ-18",
+                "Сайга-12",
+                "РПГ-7",
+            };
+
+            string[] ranks = new string[]
+            {
+                 "рядовой",
+                 "сержант",
+                 "прапорщик",
+                 "лейтенант",
+                 "капитан",
+                 "майор",
+                 "полковник"
+            };
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                int minCountMonth = 1;
+                int maxCountMonth = 366;
+
+                string weapon = weapons[UserUtils.GenerateRandomNumber(0, weapons.Length)];
+                string rank = ranks[UserUtils.GenerateRandomNumber(0, ranks.Length)];
+                int serviceLifeInMonths = UserUtils.GenerateRandomNumber(minCountMonth, maxCountMonth);
+
+                _soldiers.Add(new Soldier(names[i], weapon, rank, serviceLifeInMonths));
+            }
+        }
+
+        private void ShowSoldiers()
+        {
+            int index = 0;
+
+            foreach (var soldier in _soldiers)
+            {
+                Console.Write($"{++index}. ");
+                soldier.ShowInfo();
+            }
+        }
+
+        private void ShowNameAndRank()
+        {
+            var filteredList = _soldiers.Select(soldier => new { soldier.Name, soldier.Rank });
+
+            int index = 0;
+
+            foreach (var soldier in filteredList)
+            {
+                Console.Write($"{++index}. ");
+                Console.WriteLine($"Имя: {soldier.Name}, Звание: {soldier.Rank}");
+            }
+        }
+    }
+
+    class Soldier
+    {
+        public Soldier(string name, string weapon, string rank, int serviceLifeInMonths)
+        {
+            Name = name;
+            Weapon = weapon;
+            Rank = rank;
+            ServiceLifeInMonths = serviceLifeInMonths;
+        }
+
+        public string Name { get; private set; }
+        public string Weapon { get; private set; }
+        public string Rank { get; private set; }
+        public int ServiceLifeInMonths { get; private set; }
+
+        public void ShowInfo()
+        {
+            Console.WriteLine($"Имя: {Name}, Звание: {Rank}, На вооружении: {Weapon}, Срок службы: {ServiceLifeInMonths} мес.");
+        }
+    }
+
+    static class UserUtils
+    {
+        private static readonly Random s_random = new Random();
+
+        public static int GenerateRandomNumber(int min, int max)
+        {
+            return s_random.Next(min, max);
+        }
+    }
+}
