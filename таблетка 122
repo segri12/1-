@@ -1,0 +1,185 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LINQ_каличи_мои_любимые_10_человек
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Hospital hospital = new Hospital();
+            hospital.RunGameLoop();
+        }
+    }
+
+    class Hospital
+    {
+        private List<Patient> _patients = new List<Patient>();
+
+        public Hospital()
+        {
+            GeneratePatients();
+        }
+
+        public void RunGameLoop()
+        {
+            const string CommandShowAllPatients = "1";
+            const string CommandSortByName = "2";
+            const string CommandSortByAge = "3";
+            const string CommandShowIllness = "4";
+            const string CommandExit = "5";
+
+            bool isRunGameLoop = true;
+
+            while (isRunGameLoop)
+            {
+                Console.WriteLine("Выберите один из пунктов в нашей прекрасной больнице ЗЮЗИЛЕНД:");
+                Console.WriteLine($"{CommandShowAllPatients} - Вывести всех больных;");
+                Console.WriteLine($"{CommandSortByName} - Отсортировать всех больных по фио;");
+                Console.WriteLine($"{CommandSortByAge} - Отсортировать всех больных по возрасту;");
+                Console.WriteLine($"{CommandShowIllness} - Вывести больных с определенным заболеванием;");
+                Console.WriteLine($"{CommandExit} - Выйти из системы.");
+                Console.Write("Введите команду: ");
+                string userIpnut = Console.ReadLine();
+
+                switch (userIpnut)
+                {
+                    case CommandShowAllPatients:
+                        ShowPatients(_patients);
+                        break;
+
+                    case CommandSortByName:
+                        ShowPatients(GetSortByName());
+                        break;
+
+                    case CommandSortByAge:
+                        ShowPatients(GetSortByAge());
+                        break;
+
+                    case CommandShowIllness:
+                        ShowPatients(GetPatientsByIllness());
+                        break;
+
+                    case CommandExit:
+                        Console.WriteLine("Выход из системы.");
+                        isRunGameLoop = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("Такого пункта меню нет");
+                        break;
+                }
+
+                Console.ReadKey();
+                Console.Clear();
+            }
+        }
+
+        private void GeneratePatients()
+        {
+            string[] names = new string[]
+            {
+                "Гаврилов Игорь Аркадьевич",
+                "Макаров Сергей Иванович",
+                "Гришин Николай  Антонович",
+                "Никонов Сергей Викторович",
+                "Евсеев Ростислав Егорович",
+                "Константинов Илья  Алексеевич",
+                "Туров Юстиниан Романович",
+                "Тимофеев Терентий Антонович",
+                "Рыбаков Артём Валентинович",
+                "Герасимов Пётр Константинович",
+                "Евдокимов Сергей Созонович",
+                "Макаров Сергей Леонидович",
+                "Семёнов Егор Богданович",
+                "Михеев Антон Романович",
+                "Новиков Руслан Сергеевич",
+                "Панов Илья Пантелеймонович",
+                "Зимин Антон Антонинович",
+                "Кузьмин Павел Романович",
+                "Овчинников Платон Проклович",
+                "Федосеев Константин Андреевич",
+                "Михновец Александр Сергеевич",
+            };
+
+            string[] illnesses = new string[]
+            {
+                "Перелом",
+                "Депрессия по дому",
+                "ОРВИ",
+                "Аллергия",
+                "Слонячка",
+                "Диарея",
+                "Ангина",
+            };
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                int minAge = 18;
+                int maxAge = 89;
+                int age = UserUtils.GenerateRandomNumber(minAge, maxAge);
+
+                _patients.Add(new Patient(names[i], age, illnesses[UserUtils.GenerateRandomNumber(0, illnesses.Length)]));
+            }
+        }
+
+        private List<Patient> GetSortByName()
+        {
+            return _patients.OrderBy(patient => patient.Name).ToList();
+        }
+        private List<Patient> GetSortByAge()
+        {
+            return _patients.OrderBy(patient => patient.Age).ToList();
+        }
+
+        private List<Patient> GetPatientsByIllness()
+        {
+            Console.Write("\nВведите конкретное заболевание: ");
+
+            string illness = Console.ReadLine();
+
+            return _patients.Where(patient => patient.Illness.ToLower() == illness.ToLower()).ToList();
+        }
+
+        private void ShowPatients(List<Patient> patients)
+        {
+            int index = 0;
+
+            foreach (var patient in patients)
+            {
+                Console.Write($"{++index}. ");
+                patient.ShowInfo();
+            }
+        }
+    }
+
+    class Patient
+    {
+        public Patient(string name, int age, string illness)
+        {
+            Name = name;
+            Age = age;
+            Illness = illness;
+        }
+
+        public string Name { get; private set; }
+        public int Age { get; private set; }
+        public string Illness { get; private set; }
+
+        public void ShowInfo()
+        {
+            Console.WriteLine($"Имя: {Name}. возраст: {Age}. болезнь твоя калич ты мой этакий: {Illness}.");
+        }
+    }
+
+    static class UserUtils
+    {
+        private static readonly Random s_random = new Random();
+
+        public static int GenerateRandomNumber(int min, int max)
+        {
+            return s_random.Next(min, max);
+        }
+    }
+}
