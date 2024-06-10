@@ -1,0 +1,84 @@
+using System.Collections;   // это первый фиолнтовый
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Mover : MonoBehaviour
+{
+    private void Update()
+    {
+        var nextPositions = transform.position;
+        nextPositions.z += 0.01f;
+        transform.position = nextPositions;
+    }
+}
+
+
+using System.Collections; //это второй что вы просили исправить я извиняю что сразу не догнал что это готовая задача с планетами и была решением. я просто делал второе задание как вертолет где рассказывалось а не где планеты. синий 
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CubeSpinning : MonoBehaviour
+{
+    [SerializeField] private float _speed;
+    [SerializeField] private Transform _rotationCenter;
+    [SerializeField] private Vector3 _offset;
+
+    private void Start()
+    {
+        _offset = transform.position - _rotationCenter.position;
+    }
+
+    private void Update()
+    {
+        transform.position = _rotationCenter.position + _offset;
+        transform.RotateAround(_rotationCenter.position, Vector3.up, _speed * Time.deltaTime);
+        transform.Rotate(Vector3.up * _speed * Time.deltaTime);
+        _offset = transform.position - _rotationCenter.position;
+    }
+}
+
+
+using System.Collections;// это третий красный 
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GrowingСapsule : MonoBehaviour
+{
+    [SerializeField] private float _speed;
+
+    private void Update()
+    {
+        var nextScale = transform.localScale;
+        nextScale.x += _speed * Time.deltaTime;
+        nextScale.y += _speed * Time.deltaTime;
+        nextScale.z += _speed * Time.deltaTime;
+        transform.localScale = nextScale;
+    }
+}
+
+
+using System.Collections;// это 4 зелёный вам так удобно прнимать работу так или надо отдельно каждую задачу с кодом?  Просто я подумал что задание легкое что и код не нужен был поээтому так и отправил.
+using System.Collections.Generic;
+using UnityEngine;
+
+public class MovingBigCube : MonoBehaviour 
+{
+    [SerializeField] private float _speed;
+    [SerializeField] private float _rotationSpeed;
+    [SerializeField] private float _growSpeed;
+
+    private void Update()
+    {
+        var nextPosition = transform.position;
+        nextPosition += transform.forward * _speed * Time.deltaTime;
+        transform.position = nextPosition;
+
+        transform.Rotate(Vector3.up * _rotationSpeed * Time.deltaTime);
+
+        var nextScale = transform.localScale;
+        nextScale.x += _growSpeed * Time.deltaTime;
+        nextScale.y += _growSpeed * Time.deltaTime;
+        nextScale.z += _growSpeed * Time.deltaTime;
+        transform.localScale = nextScale;
+    }
+}
