@@ -1,0 +1,46 @@
+using System.Collections;
+using UnityEngine;
+using TMPro;
+
+public class Timer : MonoBehaviour
+{
+    [SerializeField] private float _delay = 0.5f;  
+    [SerializeField] private TextMeshProUGUI _text; 
+
+    private Coroutine _incrementCounter;
+    private WaitForSeconds _wait;
+
+    private void Start() 
+    {
+        _text.text = "0";
+        _wait = new WaitForSeconds(_delay);
+    }
+
+    private void Update()  
+    {
+        if (Input.GetMouseButtonDown(0)) 
+        {
+            if (_incrementCounter != null)
+            {
+                StopCoroutine(_incrementCounter);
+                _incrementCounter = null;
+            }
+            else
+            {
+                _incrementCounter = StartCoroutine(CountUp());
+            }
+        }
+    }
+
+    private IEnumerator CountUp() 
+    {
+        int counter = int.Parse(_text.text); 
+
+        while (true)  
+        {
+            counter++;  
+            _text.text = counter.ToString();
+            yield return _wait;
+        }
+    }
+}
