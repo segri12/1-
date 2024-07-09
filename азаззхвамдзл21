@@ -1,0 +1,96 @@
+using System.Collections;
+using UnityEngine;
+using TMPro;
+
+public class Timer : MonoBehaviour
+{
+    [SerializeField] private float _delay = 0.5f;  //как просили задежка
+    [SerializeField] private TextMeshProUGUI _text; //это чтоб текст работал
+
+    private Coroutine _incrementCounter; //увеличивать счетчик
+    private WaitForSeconds _wait; // ждать
+    private int _count;
+
+    private void Start() // тут и так понятно старт 
+    {	
+	_count = 0;
+        _text.text = _count.ToString();  //установка текста изначального в 0 
+	_wait = new WaitForSeconds(_delay);  //это строка кода, которая создает новый объект типа WaitForSeconds и присваивает его переменной _wait
+    }
+
+    private void Update()  //тут у нас процес нажатия всё просто 
+    {
+        if (Input.GetMouseButtonDown(0)) //Input предоставляет доступ ко всему что есть на клаве полезная тема 
+        {
+            if (_incrementCounter != null)
+            {
+                StopCoroutine(_incrementCounter);
+                _incrementCounter = null;
+            }
+            else
+            {
+                _incrementCounter = StartCoroutine(CountUp());
+            }
+        }
+    }
+    
+    private IEnumerator CountUp() //CountUp запомни блять это карутина и она увеличивает счетчик каждые _delay секунд ЛЕГКО     IEnumerator  нужна для карутин это функции, которые могут прерываться и возобновляться в определенные моменты
+    {       
+        while (true)  //// Бесконечный цикл
+        {
+            _count++;  // Увеличиваем счетчик на 1
+            _text.text = _count.ToString();  // Обновляем текст тоесть ToString выводит цифры которые обновляються
+            yield return _wait;  //приостанавливает выполнение метода CountUp() на время
+        }
+    }
+}
+
+
+это без 
+
+using System.Collections;
+using UnityEngine;
+using TMPro;
+
+public class Timer : MonoBehaviour
+{
+    [SerializeField] private float _delay = 0.5f;  
+    [SerializeField] private TextMeshProUGUI _text; 
+
+    private Coroutine _incrementCounter;
+    private WaitForSeconds _wait;
+    private int _count;
+
+    private void Start() 
+    {
+        _count = 0;
+        _text.text = _count.ToString();
+        _wait = new WaitForSeconds(_delay);
+    }
+
+    private void Update()  
+    {
+        if (Input.GetMouseButtonDown(0)) 
+        {
+            if (_incrementCounter != null)
+            {
+                StopCoroutine(_incrementCounter);
+                _incrementCounter = null;
+            }
+            else
+            {
+                _incrementCounter = StartCoroutine(CountUp());
+            }
+        }
+    }
+
+    private IEnumerator CountUp() 
+    {      
+        while (true)  
+        {
+            _count++;
+            _text.text = _count.ToString();
+            yield return _wait;
+        }
+    }
+}
